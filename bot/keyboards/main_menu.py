@@ -9,3 +9,8 @@ def get_main_menu() -> InlineKeyboardMarkup:
     builder.adjust(1)
 
     return builder.as_markup()
+
+def get_back_button() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text="⬅️ Назад", callback_data="radar:menu")
+    return builder.as_markup()
