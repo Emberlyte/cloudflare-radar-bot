@@ -1,6 +1,5 @@
 services:
   radar-bot:
-    build: .
     container_name: cloudflare-radar-bot
     restart: unless-stopped
     env_file:
