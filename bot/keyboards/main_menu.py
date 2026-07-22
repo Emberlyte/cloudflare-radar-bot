@@ -5,6 +5,7 @@ def get_main_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     builder.button(text="📱 Устройства", callback_data="radar:devices")
+    builder.button(text="🌍 Локации", callback_data="radar:locations")
 
     builder.adjust(1)
 
