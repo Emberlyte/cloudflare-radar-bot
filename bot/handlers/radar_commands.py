@@ -111,6 +111,43 @@ def format_top_locations(data: dict, period: str) -> str:
     return "\n".join(lines)
 
 
+@router.callback_query(F.data == "radar:ases")
+async def ask_top_ases(callback: types.CallbackQuery):
+    await safe_edit_text(callback.message, "Выбери период:", get_period_keyboard("ases"))
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("period:ases:"))
+async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    period = callback.data.split(":")[2]
+    try:
+        data = await radar_client.top_ases(date_range=period, limit=5)
+        text = format_top_ases(data, period)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for ases, period=%s", period)
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching top ases, period=%s", period)
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch top ases for period=%s", period)
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+
+def format_top_ases(data, period):
+    ases = data["top_0"]
+    period_label = {"7d": "7 дней", "30d": "30 дней", "90d": "90 дней"}.get(period, period)
+    lines = [f"🌐 <b>Топ провайдеров за {period_label}</b>\n"]
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+    for i, asn in enumerate(ases):
+        medal = medals[i] if i < len(medals) else f"{i + 1}."
+        name = asn["clientASName"]
+        value = float(asn["value"])
+        lines.append(f"{medal} {name}: {value:.1f}%")
+    return "\n".join(lines)
+
+
 @router.callback_query(F.data == "radar:menu")
 async def back_to_menu(callback: types.CallbackQuery):
     await safe_edit_text(callback.message, "Выбери, что показать:", get_main_menu())

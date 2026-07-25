@@ -50,3 +50,21 @@ class CloudFlareRadarClient:
                 raise Exception(f"Radar API error: {data.get('errors')}")
 
             return data["result"]
+
+
+    async def top_ases(self, date_range: str = "30d", limit: int = 5):
+        url = f"{self.BASE_URL}/http/top/ases"
+        params = {"dateRange": date_range, "limit": limit}
+
+        async with self._session.get(
+            url, headers=self._headers, params=params, timeout=self.TIMEOUT_REQUEST
+        ) as response:
+            if response.status == 429:
+                raise CloudflareRateLimitError("Rate limited by Cloudflare Radar API")
+
+            data = await response.json()
+
+            if not data.get("success", False):
+                raise Exception(f"Radar API error: {data.get('errors')}")
+
+            return data["result"]
