@@ -148,6 +148,46 @@ def format_top_ases(data, period):
     return "\n".join(lines)
 
 
+@router.callback_query(F.data == "radar:quality")
+async def show_quality(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    try:
+        data = await radar_client.quality_speed()
+        text = format_quality_speed(data)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for quality speed")
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching quality speed")
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch quality speed")
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+def format_quality_speed(data: dict) -> str:
+    summary = data["summary_0"]
+
+    download = float(summary["bandwidthDownload"])
+    upload = float(summary["bandwidthUpload"])
+    latency_idle = float(summary["latencyIdle"])
+    latency_loaded = float(summary["latencyLoaded"])
+    jitter_idle = float(summary["jitterIdle"])
+    jitter_loaded = float(summary["jitterLoaded"])
+    packet_loss = float(summary["packetLoss"])
+
+    return (
+        "⚡ <b>Качество интернета (глобально)</b>\n\n"
+        f"⬇️ Скачивание: {download:.1f} Mbps\n"
+        f"⬆️ Отдача: {upload:.1f} Mbps\n\n"
+        f"⏱ Задержка (простой): {latency_idle:.0f} ms\n"
+        f"⏱ Задержка (под нагрузкой): {latency_loaded:.0f} ms\n\n"
+        f"📶 Джиттер (простой): {jitter_idle:.1f} ms\n"
+        f"📶 Джиттер (под нагрузкой): {jitter_loaded:.1f} ms\n\n"
+        f"📉 Потеря пакетов: {packet_loss:.2f}%"
+    )
+
+
 @router.callback_query(F.data == "radar:menu")
 async def back_to_menu(callback: types.CallbackQuery):
     await safe_edit_text(callback.message, "Выбери, что показать:", get_main_menu())
