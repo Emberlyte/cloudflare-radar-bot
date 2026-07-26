@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     CF_TOKEN: str
     BOT_TOKEN: str
     DEBUG: bool = False
+    REDIS_URL: str = "redis://redis:6379/0"
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

@@ -6,6 +6,8 @@ services:
       - .env
     volumes:
       - ./logs:/app/logs
+    depends_on:
+      - redis
     healthcheck:
       test: ["CMD", "pgrep", "-f", "bot.main"]
       interval: 30s
@@ -17,3 +19,13 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  redis:
+    image: redis:8.6.5-alpine
+    container_name: radar-bot-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
