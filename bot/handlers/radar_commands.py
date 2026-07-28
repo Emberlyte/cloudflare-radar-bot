@@ -19,6 +19,7 @@ async def ask_period_devices(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith("period:devices:"))
 async def show_devices(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
     period = callback.data.split(":")[2]
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.summary_device_type(date_range=period)
         text = format_device_summary(data, period)
@@ -70,6 +71,7 @@ async def ask_period_locations(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith("period:locations:"))
 async def show_locations(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
     period = callback.data.split(":")[2]
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_location(date_range=period, limit=5)
         text = format_top_locations(data, period)
@@ -119,6 +121,7 @@ async def ask_top_ases(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith("period:ases:"))
 async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
     period = callback.data.split(":")[2]
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_ases(date_range=period, limit=5)
         text = format_top_ases(data, period)
@@ -150,6 +153,7 @@ def format_top_ases(data, period):
 
 @router.callback_query(F.data == "radar:quality")
 async def show_quality(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.quality_speed()
         text = format_quality_speed(data)
