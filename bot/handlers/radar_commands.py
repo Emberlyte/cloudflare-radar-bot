@@ -12,7 +12,7 @@ router = Router()
 
 @router.callback_query(F.data == "radar:devices")
 async def ask_period_devices(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "Выбери период:", get_period_keyboard("devices"))
+    await safe_edit_text(callback.message, "📱 За какой период показать устройства?", get_period_keyboard("devices"))
     await callback.answer()
 
 
@@ -61,10 +61,9 @@ def format_device_summary(data: dict, period: str) -> str:
         f"❓ Другое: {other:.1f}%"
     )
 
-
 @router.callback_query(F.data == "radar:locations")
 async def ask_period_locations(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "Выбери период:", get_period_keyboard("locations"))
+    await safe_edit_text(callback.message, "🌍 За какой период показать топ локаций?", get_period_keyboard("locations"))
     await callback.answer()
 
 
@@ -114,8 +113,8 @@ def format_top_locations(data: dict, period: str) -> str:
 
 
 @router.callback_query(F.data == "radar:ases")
-async def ask_top_ases(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "Выбери период:", get_period_keyboard("ases"))
+async def ask_period_ases(callback: types.CallbackQuery):
+    await safe_edit_text(callback.message, "🌐 За какой период показать топ провайдеров?", get_period_keyboard("ases"))
     await callback.answer()
 
 @router.callback_query(F.data.startswith("period:ases:"))
