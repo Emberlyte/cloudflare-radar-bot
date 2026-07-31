@@ -18,5 +18,5 @@ async def http_session():
 
 @pytest.fixture
 async def radar_client(http_session, redis_client):
-    return CloudFlareRadarClient(http_session(), redis_client())
+    return CloudFlareRadarClient(http_session, redis_client)
 
