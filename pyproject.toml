@@ -12,3 +12,16 @@ dependencies = [
     "redis>=8.0.1",
     "requests>=2.34.2",
 ]
+
+[dependency-groups]
+dev = [
+    "aioresponses>=0.7.9",
+    "fakeredis>=2.37.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
