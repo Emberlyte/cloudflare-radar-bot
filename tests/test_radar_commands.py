@@ -1,0 +1,117 @@
+import pytest
+
+from bot.handlers.radar_commands import (
+    show_devices,
+    show_locations,
+    show_ases,
+    show_quality,
+    back_to_menu,
+    ask_period_devices,
+)
+from service.cloudflare_radar import CloudflareRateLimitError
+
+
+async def test_show_devices_success(mock_callback, mock_radar_client):
+    mock_callback.data = "period:devices:30d"
+    mock_radar_client.summary_device_type.return_value = {
+        "summary_0": {"desktop": "60.0", "mobile": "39.0", "other": "1.0"}
+    }
+
+    await show_devices(mock_callback, mock_radar_client)
+
+    mock_radar_client.summary_device_type.assert_called_once_with(date_range="30d")
+    mock_callback.message.edit_text.assert_called_once()
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "60.0" in text_arg
+    mock_callback.answer.assert_called_once()
+
+
+async def test_show_devices_rate_limited(mock_callback, mock_radar_client):
+    mock_callback.data = "period:devices:30d"
+    mock_radar_client.summary_device_type.side_effect = CloudflareRateLimitError("rate limited")
+
+    await show_devices(mock_callback, mock_radar_client)
+
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "Слишком много запросов" in text_arg
+    mock_callback.answer.assert_called_once()
+
+
+async def test_show_devices_timeout(mock_callback, mock_radar_client):
+    mock_callback.data = "period:devices:30d"
+    mock_radar_client.summary_device_type.side_effect = TimeoutError()
+
+    await show_devices(mock_callback, mock_radar_client)
+
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "долго отвечает" in text_arg
+
+
+async def test_show_devices_unexpected_error(mock_callback, mock_radar_client):
+    mock_callback.data = "period:devices:30d"
+    mock_radar_client.summary_device_type.side_effect = ValueError("something broke")
+
+    await show_devices(mock_callback, mock_radar_client)
+
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "Не удалось получить данные" in text_arg
+
+
+async def test_show_locations_success(mock_callback, mock_radar_client):
+    mock_callback.data = "period:locations:7d"
+    mock_radar_client.top_location.return_value = {
+        "top_0": [{"clientCountryName": "United States", "value": "15.2"}]
+    }
+
+    await show_locations(mock_callback, mock_radar_client)
+
+    mock_radar_client.top_location.assert_called_once_with(date_range="7d", limit=5)
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "United States" in text_arg
+
+
+async def test_show_ases_success(mock_callback, mock_radar_client):
+    mock_callback.data = "period:ases:90d"
+    mock_radar_client.top_ases.return_value = {
+        "top_0": [{"clientASName": "Google LLC", "value": "8.5"}]
+    }
+
+    await show_ases(mock_callback, mock_radar_client)
+
+    mock_radar_client.top_ases.assert_called_once_with(date_range="90d", limit=5)
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "Google LLC" in text_arg
+
+
+async def test_show_quality_success(mock_callback, mock_radar_client):
+    mock_radar_client.quality_speed.return_value = {
+        "summary_0": {
+            "bandwidthDownload": "120.5",
+            "bandwidthUpload": "64.2",
+            "latencyIdle": "97.4",
+            "latencyLoaded": "263.5",
+            "jitterIdle": "33.7",
+            "jitterLoaded": "70.2",
+            "packetLoss": "2.3",
+        }
+    }
+
+    await show_quality(mock_callback, mock_radar_client)
+
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "120.5" in text_arg
+
+
+async def test_back_to_menu(mock_callback):
+    await back_to_menu(mock_callback)
+
+    mock_callback.message.edit_text.assert_called_once()
+    mock_callback.answer.assert_called_once()
+
+
+async def test_ask_period_devices(mock_callback):
+    await ask_period_devices(mock_callback)
+
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "устройства" in text_arg.lower()
+    mock_callback.answer.assert_called_once()
