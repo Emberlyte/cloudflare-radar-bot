@@ -11,6 +11,9 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      BOT_TOKEN: test_bot_token
+      CF_TOKEN: test_cf_token
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
