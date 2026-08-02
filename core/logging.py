@@ -3,7 +3,7 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-from core.config import settings
+from core.config import get_settings
 
 
 LOG_DIR = Path("logs")
@@ -13,6 +13,7 @@ LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def setup_logging() -> None:
+    settings = get_settings()
     root = logging.getLogger()
     root.setLevel(logging.DEBUG if settings.DEBUG else logging.INFO)
 

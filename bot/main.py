@@ -6,7 +6,7 @@ import aiohttp
 import redis.asyncio as redis
 from aiogram.client.default import DefaultBotProperties
 
-from core.config import settings
+from core.config import get_settings
 from core.logging import setup_logging
 from service.cloudflare_radar import CloudFlareRadarClient
 from bot.handlers import register_handlers
@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 async def main():
     setup_logging()
     logger.info("Starting bot...")
+
+    settings = get_settings()
 
     bot = Bot(token=settings.BOT_TOKEN,
               default=DefaultBotProperties(parse_mode="HTML"))

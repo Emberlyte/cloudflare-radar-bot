@@ -2,7 +2,7 @@ import aiohttp
 import json
 import redis.asyncio as redis
 
-from core.config import settings
+from core.config import get_settings
 
 
 class CloudflareRateLimitError(Exception):
@@ -16,6 +16,7 @@ class CloudFlareRadarClient:
 
     def __init__(self, session: aiohttp.ClientSession, redis_client: redis.Redis):
         self._session = session
+        settings = get_settings()
         self._headers = {
             "Authorization": f"Bearer {settings.CF_TOKEN}"
         }
