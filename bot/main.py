@@ -52,11 +52,14 @@ def run_webhook():
     settings = get_settings()
 
     async def _setup():
-        bot, dp =  await setup_bot()
+        bot, dp = await setup_bot()
         webhook_url = f"{settings.WEBHOOK_BASE_URL}{settings.WEBHOOK_PATH}"
 
         async def on_startup():
-            await bot.set_webhook(webhook_url)
+            await bot.set_webhook(
+                webhook_url,
+                secret_token=settings.WEBHOOK_SECRET,
+            )
             logger.info("Webhook set to %s", webhook_url)
 
         async def on_shutdown():
@@ -66,7 +69,11 @@ def run_webhook():
         dp.shutdown.register(on_shutdown)
 
         app = web.Application()
-        SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=settings.WEBHOOK_PATH)
+        SimpleRequestHandler(
+            dispatcher=dp,
+            bot=bot,
+            secret_token=settings.WEBHOOK_SECRET,
+        ).register(app, path=settings.WEBHOOK_PATH)
         setup_application(app, dp, bot=bot)
         return app
 

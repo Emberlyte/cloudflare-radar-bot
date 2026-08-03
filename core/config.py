@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     WEBHOOK_BASE_URL: str = ""
     WEBHOOK_PATH: str = "/webhook"
     WEBAPP_PORT: int = 8080
+    WEBHOOK_SECRET: str = ""
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
