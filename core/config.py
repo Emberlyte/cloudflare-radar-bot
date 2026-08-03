@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     DEBUG: bool = False
     REDIS_URL: str = "redis://redis:6379/0"
+    BOT_MODE: str = "polling"
+    WEBHOOK_BASE_URL: str = ""
+    WEBHOOK_PATH: str = "/webhook"
+    WEBAPP_PORT: int = 8080
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
