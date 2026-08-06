@@ -3,7 +3,7 @@ import logging
 
 from aiogram import Router, types, F
 from service.cloudflare_radar import CloudFlareRadarClient, CloudflareRateLimitError
-from bot.keyboards.main_menu import get_back_button, get_main_menu, get_period_keyboard
+from bot.keyboards.main_menu import get_back_button, get_main_menu, get_period_keyboard, get_attacks_menu
 from bot.utils.safe_edit import safe_edit_text
 
 logger = logging.getLogger(__name__)
@@ -188,6 +188,96 @@ def format_quality_speed(data: dict) -> str:
         f"📶 Джиттер (простой): {jitter_idle:.1f} ms\n"
         f"📶 Джиттер (под нагрузкой): {jitter_loaded:.1f} ms\n\n"
         f"📉 Потеря пакетов: {packet_loss:.2f}%"
+    )
+
+
+@router.callback_query(F.data == "radar:attacks")
+async def ask_attack_layer(callback: types.CallbackQuery):
+    await safe_edit_text(callback.message,  "🛡 Какой уровень атак показать?", get_attacks_menu())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "attacks:layer3")
+async def show_attacks_layer3(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    try:
+        data = await radar_client.attacks_layer3_summary()
+        text = format_attacks_layer3(data)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for attacks layer3")
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching attacks layer3")
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch attacks layer3 summary")
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+
+@router.callback_query(F.data == "attacks:layer7")
+async def show_attacks_layer7(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    try:
+        data = await radar_client.attacks_layer7_summary()
+        text = format_attacks_layer7(data)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for attacks layer7")
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching attacks layer7")
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch attacks layer3 summary")
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+
+def format_attacks_layer3(data: dict) -> str:
+    summary = data["summary_0"]
+
+    udp = float(summary.get("UDP", 0))
+    tcp = float(summary.get("TCP", 0))
+    gre = float(summary.get("GRE", 0))
+    icmp = float(summary.get("ICMP", 0))
+
+    return (
+        "🌐 <b>Layer 3 атаки — распределение по протоколам</b>\n\n"
+        f"⚡ <b>UDP:</b> {udp:.1f}%\n"
+        f"🔌 <b>TCP:</b> {tcp:.1f}%\n"
+        f"🛡️ <b>GRE:</b> {gre:.1f}%\n"
+        f"📡 <b>ICMP:</b> {icmp:.1f}%\n"
+    )
+
+def format_attacks_layer7(data: dict) -> str:
+    summary = data["summary_0"]
+
+    get_req = float(summary.get("GET", 0))
+    post = float(summary.get("POST", 0))
+    head = float(summary.get("HEAD", 0))
+    options = float(summary.get("OPTIONS", 0))
+    patch = float(summary.get("PATCH", 0))
+    put = float(summary.get("PUT", 0))
+    delete = float(summary.get("DELETE", 0))
+
+    other = (
+            float(summary.get("UNKNOWN", 0))
+            + float(summary.get("ACL", 0))
+            + float(summary.get("other", 0))
+    )
+
+    return (
+        "🔥 <b>Layer 7 атаки — распределение по методам</b>\n\n"
+        f"📥 <b>GET:</b> {get_req:.1f}%\n"
+        f"📤 <b>POST:</b> {post:.1f}%\n"
+        f"👤 <b>HEAD:</b> {head:.1f}%\n"
+        f"⚙️ <b>OPTIONS:</b> {options:.1f}%\n"
+        f"🩹 <b>PATCH:</b> {patch:.1f}%\n"
+        f"📦 <b>PUT:</b> {put:.1f}%\n"
+        f"🗑️ <b>DELETE:</b> {delete:.1f}%\n"
+        f"❓ <b>Другие:</b> {other:.1f}%\n"
     )
 
 

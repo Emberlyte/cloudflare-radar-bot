@@ -63,3 +63,15 @@ class CloudFlareRadarClient:
         url = f"{self.BASE_URL}/quality/speed/summary"
         params = {"dateRange": date_range}
         return await self._get(url, params)
+
+    async def attacks_layer3_summary(self, date_range: str = "30d") -> dict:
+        url = f"{self.BASE_URL}/attacks/layer3/summary/protocol"
+        params = {"dateRange": date_range}
+        result = await self._get(url, params)
+        return result
+
+    async def attacks_layer7_summary(self, date_range: str = "30d") -> dict:
+        url = f"{self.BASE_URL}/attacks/layer7/summary/http_method"
+        params = {"dateRange": date_range}
+        result = await self._get(url, params)
+        return result
