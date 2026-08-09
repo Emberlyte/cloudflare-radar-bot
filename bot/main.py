@@ -12,6 +12,8 @@ from core.config import get_settings
 from core.logging import setup_logging
 from service.cloudflare_radar import CloudFlareRadarClient
 from bot.handlers import register_handlers
+from bot.middlewares.throttling import ThrottlingMiddleware
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +21,9 @@ WEBAPP_HOST = "0.0.0.0"
 
 
 async def setup_bot() -> tuple[Bot, Dispatcher]:
-
     settings = get_settings()
 
-    bot = Bot(token=settings.BOT_TOKEN,
-              default=DefaultBotProperties(parse_mode="HTML"))
+    bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
 
     session = aiohttp.ClientSession()
@@ -31,6 +31,10 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     radar_client = CloudFlareRadarClient(session, redis_client)
 
     dp["radar_client"] = radar_client
+
+    throttling = ThrottlingMiddleware(redis_client, limit=10, window_seconds=60)
+    dp.message.middleware(throttling)
+    dp.callback_query.middleware(throttling)
 
     register_handlers(dp)
 
