@@ -75,3 +75,9 @@ class CloudFlareRadarClient:
         params = {"dateRange": date_range}
         result = await self._get(url, params)
         return result
+
+    async def dns_by_protocol_summary(self, date_range: str = "30d") -> dict:
+        url = f"{self.BASE_URL}/dns/summary/protocol"
+        params = {"dateRange": date_range, "format": "json"}
+        result = await self._get(url, params)
+        return result

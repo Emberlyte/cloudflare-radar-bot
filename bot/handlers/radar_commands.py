@@ -281,6 +281,33 @@ def format_attacks_layer7(data: dict) -> str:
     )
 
 
+@router.callback_query(F.data == "radar:dns")
+async def show_dns(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    try:
+        data = await radar_client.dns_by_protocol_summary()
+        text = format_dns_protocol(data)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for DNS protocol")
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching DNS protocol summary")
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch DNS protocol summary")
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+
+def format_dns_protocol(data: dict) -> str:
+    summary = data["summary_0"]
+    lines = ["🔤 <b>DNS-запросы по протоколу</b>\n"]
+    for protocol, value in sorted(summary.items(), key=lambda x: -float(x[1])):
+        lines.append(f"{protocol}: {float(value):.1f}%")
+    return "\n".join(lines)
+
+
 @router.callback_query(F.data == "radar:menu")
 async def back_to_menu(callback: types.CallbackQuery):
     await safe_edit_text(callback.message, "Выбери, что показать:", get_main_menu())
