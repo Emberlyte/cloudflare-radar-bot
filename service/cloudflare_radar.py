@@ -81,3 +81,9 @@ class CloudFlareRadarClient:
         params = {"dateRange": date_range, "format": "json"}
         result = await self._get(url, params)
         return result
+
+    async def email_threat_category_summary(self, data_range: str = "30d") -> dict:
+        url = f"{self.BASE_URL}/email/security/summary/threat_category"
+        params = {"dateRange": data_range}
+        result = await self._get(url, params)
+        return result

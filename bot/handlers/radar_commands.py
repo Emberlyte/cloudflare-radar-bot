@@ -308,6 +308,39 @@ def format_dns_protocol(data: dict) -> str:
     return "\n".join(lines)
 
 
+@router.callback_query(F.data == "radar:email")
+async def show_email_threats(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    try:
+        data = await radar_client.email_threat_category_summary()
+        text = format_email_threats(data)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for email threats")
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching email threat summary")
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch email threat summary")
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+def format_email_threats(data: dict) -> str:
+    summary = data["summary_0"]
+    period_label = "30 дней"
+
+    sorted_threats = sorted(summary.items(), key=lambda x: -float(x[1]))
+    top_threats = sorted_threats[:8]
+
+    lines = [f"📧 <b>Топ угроз в email за {period_label}</b>\n"]
+    for category, value in top_threats:
+        lines.append(f"{category}: {float(value):.1f}%")
+
+    lines.append("\n<i>Одно письмо может попадать сразу под несколько категорий, поэтому сумма процентов может превышать 100%.</i>")
+
+    return "\n".join(lines)
+
 @router.callback_query(F.data == "radar:menu")
 async def back_to_menu(callback: types.CallbackQuery):
     await safe_edit_text(callback.message, "Выбери, что показать:", get_main_menu())
