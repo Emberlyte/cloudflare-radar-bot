@@ -68,3 +68,67 @@ async def test_summary_device_type_uses_cache(radar_client):
         mock_get.assert_called_once()
 
     assert result["summary_0"]["desktop"] == "60.0"
+
+
+async def test_attacks_layer3_summary_success(radar_client):
+    mock_response = make_mock_response(
+        status=200,
+        json_data={
+            "success": True,
+            "errors": [],
+            "result": {"summary_0": {"UDP": "93.1", "TCP": "6.8", "GRE": "0.04", "ICMP": "0.02"}},
+        },
+    )
+
+    with patch.object(radar_client._session, "get", return_value=mock_response):
+        result = await radar_client.attacks_layer3_summary()
+
+    assert result["summary_0"]["UDP"] == "93.1"
+
+
+async def test_attacks_layer7_summary_success(radar_client):
+    mock_response = make_mock_response(
+        status=200,
+        json_data={
+            "success": True,
+            "errors": [],
+            "result": {"summary_0": {"GET": "81.1", "POST": "15.1"}},
+        },
+    )
+
+    with patch.object(radar_client._session, "get", return_value=mock_response):
+        result = await radar_client.attacks_layer7_summary()
+
+    assert result["summary_0"]["GET"] == "81.1"
+
+
+async def test_dns_by_protocol_summary_success(radar_client):
+    mock_response = make_mock_response(
+        status=200,
+        json_data={
+            "success": True,
+            "errors": [],
+            "result": {"summary_0": {"UDP": "84.6", "TLS": "7.0", "HTTPS": "6.2", "TCP": "2.2"}},
+        },
+    )
+
+    with patch.object(radar_client._session, "get", return_value=mock_response):
+        result = await radar_client.dns_by_protocol_summary()
+
+    assert result["summary_0"]["UDP"] == "84.6"
+
+
+async def test_email_threat_category_summary_success(radar_client):
+    mock_response = make_mock_response(
+        status=200,
+        json_data={
+            "success": True,
+            "errors": [],
+            "result": {"summary_0": {"Link": "67.5", "Scam": "65.4"}},
+        },
+    )
+
+    with patch.object(radar_client._session, "get", return_value=mock_response):
+        result = await radar_client.email_threat_category_summary()
+
+    assert result["summary_0"]["Link"] == "67.5"
