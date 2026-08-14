@@ -341,6 +341,41 @@ def format_email_threats(data: dict) -> str:
 
     return "\n".join(lines)
 
+
+@router.callback_query(F.data == "radar:services")
+async def show_top_services(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    try:
+        data = await radar_client.top_internet_services(limit=10)
+        text = format_top_services(data)
+        await safe_edit_text(callback.message, text, get_back_button())
+    except CloudflareRateLimitError:
+        logger.warning("Rate limited by Radar API for top internet services")
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.",
+                             get_back_button())
+    except asyncio.TimeoutError:
+        logger.warning("Timeout fetching top internet services")
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+    except Exception:
+        logger.exception("Failed to fetch top internet services")
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+    await callback.answer()
+
+
+def format_top_services(data: dict) -> str:
+    services = data["top_0"]
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+
+    lines = ["🏆 <b>Топ интернет-сервисов</b>\n"]
+    for item in services:
+        rank = item["rank"]
+        service = item["service"]
+        medal = medals[rank - 1] if rank <= len(medals) else f"{rank}."
+        lines.append(f"{medal} {service}")
+
+    return "\n".join(lines)
+
+
 @router.callback_query(F.data == "radar:menu")
 async def back_to_menu(callback: types.CallbackQuery):
     await safe_edit_text(callback.message, "Выбери, что показать:", get_main_menu())

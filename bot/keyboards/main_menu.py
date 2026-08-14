@@ -11,6 +11,7 @@ def get_main_menu() -> InlineKeyboardMarkup:
     builder.button(text="🛡 Атаки и DDoS", callback_data="radar:attacks")
     builder.button(text="🔤 DNS по протоколу", callback_data="radar:dns")
     builder.button(text="📧 Email-угрозы", callback_data="radar:email")
+    builder.button(text="🏆 Топ интернет-сервисов", callback_data="radar:services")
     builder.adjust(1)
 
     return builder.as_markup()

@@ -87,3 +87,9 @@ class CloudFlareRadarClient:
         params = {"dateRange": data_range}
         result = await self._get(url, params)
         return result
+
+    async def top_internet_services(self, limit: int = 10) -> dict:
+        url = f"{self.BASE_URL}/ranking/internet_services/top"
+        params = {"dateRange": limit}
+        result = await self._get(url, params)
+        return result
