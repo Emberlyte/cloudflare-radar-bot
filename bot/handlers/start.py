@@ -26,3 +26,16 @@ async def cmd_command(message: types.Message):
         "Для разделов с историей можно выбрать период: 7, 30 или 90 дней.\n\n"
         "Данные предоставлены Cloudflare Radar API и обновляются каждые несколько часов."
     )
+
+
+@router.message(Command("about"))
+async def about_handler(message: types.Message):
+    await message.answer(
+        "ℹ️ <b>О боте</b>\n\n"
+        "Этот бот показывает статистику интернет-трафика через Cloudflare Radar API — "
+        "публичный сервис Cloudflare с агрегированными данными о трафике, атаках, DNS и качестве интернета по всему миру.\n\n"
+        "🔧 Технологии: Python, aiogram 3, Redis, Docker\n"
+        "📊 Источник данных: Cloudflare Radar (radar.cloudflare.com)\n"
+        "📄 Лицензия: MIT\n"
+        "Исходный код: github.com/emberlyte/cloudflare-radar-bot"
+    )
