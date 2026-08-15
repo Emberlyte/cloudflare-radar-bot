@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 import aiohttp
 import redis.asyncio as redis
 from aiogram.client.default import DefaultBotProperties
+from aiogram.types import BotCommand
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 
@@ -25,6 +26,12 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
 
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
+
+    await bot.set_my_commands([
+        BotCommand(command="start", description="Открыть главное меню"),
+        BotCommand(command="help", description="Как пользоваться ботом"),
+        BotCommand(command="about", description="О боте"),
+    ])
 
     session = aiohttp.ClientSession()
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
