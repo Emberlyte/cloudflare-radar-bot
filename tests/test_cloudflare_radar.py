@@ -132,3 +132,25 @@ async def test_email_threat_category_summary_success(radar_client):
         result = await radar_client.email_threat_category_summary()
 
     assert result["summary_0"]["Link"] == "67.5"
+
+
+async def test_top_internet_services_success(radar_client):
+    mock_response = make_mock_response(
+        status=200,
+        json_data={
+            "success": True,
+            "errors": [],
+            "result": {
+                "top_0": [
+                    {"rank": 1, "service": "Google"},
+                    {"rank": 2, "service": "Facebook"},
+                ]
+            },
+        },
+    )
+
+    with patch.object(radar_client._session, "get", return_value=mock_response):
+        result = await radar_client.top_internet_services(limit=10)
+
+    assert result["top_0"][0]["service"] == "Google"
+    assert result["top_0"][1]["rank"] == 2

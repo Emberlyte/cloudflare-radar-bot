@@ -10,7 +10,7 @@ from bot.handlers.radar_commands import (
     show_dns,
     show_email_threats,
     back_to_menu,
-    ask_period_devices,
+    ask_period_devices, show_top_services,
 )
 
 from service.cloudflare_radar import CloudflareRateLimitError
@@ -175,6 +175,33 @@ async def test_show_attacks_layer3_rate_limited(mock_callback, mock_radar_client
     mock_radar_client.attacks_layer3_summary.side_effect = CloudflareRateLimitError("rate limited")
 
     await show_attacks_layer3(mock_callback, mock_radar_client)
+
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "Слишком много запросов" in text_arg
+
+
+
+async def test_show_top_services_success(mock_callback, mock_radar_client):
+    mock_radar_client.top_internet_services.return_value = {
+        "top_0": [
+            {"rank": 1, "service": "Google"},
+            {"rank": 2, "service": "Facebook"},
+        ]
+    }
+
+    await show_top_services(mock_callback, mock_radar_client)
+
+    mock_radar_client.top_internet_services.assert_called_once_with(limit=10)
+    text_arg = mock_callback.message.edit_text.call_args[0][0]
+    assert "Google" in text_arg
+    assert "Facebook" in text_arg
+    mock_callback.answer.assert_called_once()
+
+
+async def test_show_top_services_rate_limited(mock_callback, mock_radar_client):
+    mock_radar_client.top_internet_services.side_effect = CloudflareRateLimitError("rate limited")
+
+    await show_top_services(mock_callback, mock_radar_client)
 
     text_arg = mock_callback.message.edit_text.call_args[0][0]
     assert "Слишком много запросов" in text_arg
