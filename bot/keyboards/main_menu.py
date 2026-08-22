@@ -1,19 +1,17 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-def get_main_menu() -> InlineKeyboardMarkup:
+def get_main_menu(i18n) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-
-    builder.button(text="📱 Устройства", callback_data="radar:devices")
-    builder.button(text="🌍 Локации", callback_data="radar:locations")
-    builder.button(text="🌐 Топ провайдеров", callback_data="radar:ases")
-    builder.button(text="⚡ Качество интернета", callback_data="radar:quality")
-    builder.button(text="🛡 Атаки и DDoS", callback_data="radar:attacks")
-    builder.button(text="🔤 DNS по протоколу", callback_data="radar:dns")
-    builder.button(text="📧 Email-угрозы", callback_data="radar:email")
-    builder.button(text="🏆 Топ интернет-сервисов", callback_data="radar:services")
+    builder.button(text=i18n.get("menu-devices"), callback_data="radar:devices")
+    builder.button(text=i18n.get("menu-locations"), callback_data="radar:locations")
+    builder.button(text=i18n.get("menu-ases"), callback_data="radar:ases")
+    builder.button(text=i18n.get("menu-quality"), callback_data="radar:quality")
+    builder.button(text=i18n.get("menu-attacks"), callback_data="radar:attacks")
+    builder.button(text=i18n.get("menu-dns"), callback_data="radar:dns")
+    builder.button(text=i18n.get("menu-email"), callback_data="radar:email")
+    builder.button(text=i18n.get("menu-services"), callback_data="radar:services")
     builder.adjust(1)
-
     return builder.as_markup()
 
 def get_back_button() -> InlineKeyboardMarkup:

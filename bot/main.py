@@ -8,6 +8,9 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.types import BotCommand
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
+from aiogram_i18n import I18nMiddleware
+from aiogram_i18n.cores import FluentRuntimeCore
+from aiogram_i18n.managers import BaseManager
 
 from core.config import get_settings
 from core.logging import setup_logging
@@ -21,23 +24,39 @@ logger = logging.getLogger(__name__)
 WEBAPP_HOST = "0.0.0.0"
 
 
+class RedisLangManager(BaseManager):
+    def __init__(self, redis_client, default_locale: str = "en"):
+        super().__init__(default_locale=default_locale)
+        self.redis = redis_client
+
+    async def get_locale(self, event_from_user, **kwargs) -> str:
+        saved = await self.redis.get(f"lang:{event_from_user.id}")
+        if saved:
+            return saved
+        code = event_from_user.language_code or "en"
+        return "ru" if code.startswith("ru") else "en"
+
+    async def set_locale(self, locale: str, event_from_user, **kwargs) -> None:
+        await self.redis.set(f"lang:{event_from_user.id}", locale)
+
+
 async def setup_bot() -> tuple[Bot, Dispatcher]:
     settings = get_settings()
 
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
 
-    await bot.set_my_commands([
-        BotCommand(command="start", description="Открыть главное меню"),
-        BotCommand(command="help", description="Как пользоваться ботом"),
-        BotCommand(command="about", description="О боте"),
-    ])
-
     session = aiohttp.ClientSession()
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
     radar_client = CloudFlareRadarClient(session, redis_client)
 
     dp["radar_client"] = radar_client
+
+    i18n_middleware = I18nMiddleware(
+        core=FluentRuntimeCore(path="locales/{locale}/LC_MESSAGES"),
+        manager=RedisLangManager(redis_client),
+    )
+    i18n_middleware.setup(dispatcher=dp)
 
     throttling = ThrottlingMiddleware(redis_client, limit=10, window_seconds=60)
     dp.message.middleware(throttling)
