@@ -1,3 +1,6 @@
+from unittest.mock import MagicMock
+from aiogram_i18n import I18nContext
+
 import pytest
 
 from bot.handlers.radar_commands import (
@@ -108,7 +111,10 @@ async def test_show_quality_success(mock_callback, mock_radar_client):
 
 
 async def test_back_to_menu(mock_callback):
-    await back_to_menu(mock_callback)
+    i18n = MagicMock()
+    i18n.get.side_effect = lambda key, **kwargs: key
+
+    await back_to_menu(mock_callback, i18n)
 
     mock_callback.message.edit_text.assert_called_once()
     mock_callback.answer.assert_called_once()

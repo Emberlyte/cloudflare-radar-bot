@@ -5,6 +5,7 @@ from aiogram import Router, types, F
 from service.cloudflare_radar import CloudFlareRadarClient, CloudflareRateLimitError
 from bot.keyboards.main_menu import get_back_button, get_main_menu, get_period_keyboard, get_attacks_menu
 from bot.utils.safe_edit import safe_edit_text
+from aiogram_i18n import I18nContext
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -377,6 +378,6 @@ def format_top_services(data: dict) -> str:
 
 
 @router.callback_query(F.data == "radar:menu")
-async def back_to_menu(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "Выбери, что показать:", get_main_menu())
+async def back_to_menu(callback: types.CallbackQuery, i18n: I18nContext):
+    await safe_edit_text(callback.message, i18n.get("menu-choose"), get_main_menu(i18n))
     await callback.answer()
