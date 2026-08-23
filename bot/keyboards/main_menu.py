@@ -14,21 +14,20 @@ def get_main_menu(i18n) -> InlineKeyboardMarkup:
     builder.adjust(1)
     return builder.as_markup()
 
-def get_back_button() -> InlineKeyboardMarkup:
+def get_period_keyboard(i18n, section: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="⬅️ Назад", callback_data="radar:menu")
-    return builder.as_markup()
-
-def get_period_keyboard(section: str) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-
-    builder.button(text="7 дней", callback_data=f"period:{section}:7d")
-    builder.button(text="30 дней", callback_data=f"period:{section}:30d")
-    builder.button(text="90 дней", callback_data=f"period:{section}:90d")
-    builder.button(text="⬅️ Назад", callback_data="radar:menu")
+    builder.button(text=i18n.get("period-7d"), callback_data=f"period:{section}:7d")
+    builder.button(text=i18n.get("period-30d"), callback_data=f"period:{section}:30d")
+    builder.button(text=i18n.get("period-90d"), callback_data=f"period:{section}:90d")
+    builder.button(text=i18n.get("period-back"), callback_data="radar:menu")
     builder.adjust(3, 1)
     return builder.as_markup()
 
+
+def get_back_button(i18n) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text=i18n.get("period-back"), callback_data="radar:menu")
+    return builder.as_markup()
 
 def get_attacks_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
