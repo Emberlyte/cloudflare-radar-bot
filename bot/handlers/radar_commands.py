@@ -12,90 +12,79 @@ router = Router()
 
 
 @router.callback_query(F.data == "radar:devices")
-async def ask_period_devices(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "📱 За какой период показать устройства?", get_period_keyboard("devices"))
+async def ask_period_devices(callback: types.CallbackQuery, i18n: I18nContext):
+    await safe_edit_text(callback.message, i18n.get("period-ask-devices"), get_period_keyboard(i18n, "devices"))
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith("period:devices:"))
-async def show_devices(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_devices(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     period = callback.data.split(":")[2]
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.summary_device_type(date_range=period)
-        text = format_device_summary(data, period)
-        await safe_edit_text(callback.message, text, get_back_button())
+        text = format_device_summary(data, period, i18n)
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for devices, period=%s", period)
-        await safe_edit_text(
-            callback.message,
-            "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.",
-            get_back_button(),
-        )
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching device summary, period=%s", period)
-        await safe_edit_text(
-            callback.message,
-            "⏱ Cloudflare долго отвечает. Попробуй ещё раз.",
-            get_back_button(),
-        )
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch device summary for period=%s", period)
-        await safe_edit_text(
-            callback.message,
-            "⚠️ Не удалось получить данные. Попробуй позже.",
-            get_back_button(),
-        )
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
-def format_device_summary(data: dict, period: str) -> str:
+def format_device_summary(data: dict, period: str, i18n: I18nContext) -> str:
     summary = data["summary_0"]
     desktop = float(summary["desktop"])
     mobile = float(summary["mobile"])
     other = float(summary["other"])
-    period_label = {"7d": "7 дней", "30d": "30 дней", "90d": "90 дней"}.get(period, period)
-    return (
-        f"📊 <b>Устройства за {period_label}</b>\n\n"
-        f"🖥 Десктоп: {desktop:.1f}%\n"
-        f"📱 Мобильные: {mobile:.1f}%\n"
-        f"❓ Другое: {other:.1f}%"
-    )
+
+    period_label = i18n.get(f"period-{period}")
+
+    return i18n.get(
+        "devices-title", period=period_label
+    ) + "\n\n" + i18n.get("devices-desktop", value=f"{desktop:.1f}") + "\n" \
+        + i18n.get("devices-mobile", value=f"{mobile:.1f}") + "\n" \
+        + i18n.get("devices-other", value=f"{other:.1f}")
 
 @router.callback_query(F.data == "radar:locations")
-async def ask_period_locations(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "🌍 За какой период показать топ локаций?", get_period_keyboard("locations"))
+async def ask_period_locations(callback: types.CallbackQuery, i18n: I18nContext):
+    await safe_edit_text(callback.message, "🌍 За какой период показать топ локаций?", get_period_keyboard(i18n, "locations"))
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith("period:locations:"))
-async def show_locations(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_locations(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     period = callback.data.split(":")[2]
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_location(date_range=period, limit=5)
         text = format_top_locations(data, period)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for locations, period=%s", period)
         await safe_edit_text(
             callback.message,
             "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.",
-            get_back_button(),
+            get_back_button(i18n),
         )
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching top locations, period=%s", period)
         await safe_edit_text(
             callback.message,
             "⏱ Cloudflare долго отвечает. Попробуй ещё раз.",
-            get_back_button(),
+            get_back_button(i18n),
         )
     except Exception:
         logger.exception("Failed to fetch top locations for period=%s", period)
         await safe_edit_text(
             callback.message,
             "⚠️ Не удалось получить данные. Попробуй позже.",
-            get_back_button(),
+            get_back_button(i18n),
         )
     await callback.answer()
 
@@ -114,27 +103,27 @@ def format_top_locations(data: dict, period: str) -> str:
 
 
 @router.callback_query(F.data == "radar:ases")
-async def ask_period_ases(callback: types.CallbackQuery):
-    await safe_edit_text(callback.message, "🌐 За какой период показать топ провайдеров?", get_period_keyboard("ases"))
+async def ask_period_ases(callback: types.CallbackQuery, i18n: I18nContext):
+    await safe_edit_text(callback.message, "🌐 За какой период показать топ провайдеров?", get_period_keyboard(i18n, "ases"))
     await callback.answer()
 
 @router.callback_query(F.data.startswith("period:ases:"))
-async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     period = callback.data.split(":")[2]
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_ases(date_range=period, limit=5)
         text = format_top_ases(data, period)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for ases, period=%s", period)
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching top ases, period=%s", period)
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch top ases for period=%s", period)
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 
@@ -152,21 +141,21 @@ def format_top_ases(data, period):
 
 
 @router.callback_query(F.data == "radar:quality")
-async def show_quality(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_quality(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.quality_speed()
         text = format_quality_speed(data)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for quality speed")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching quality speed")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch quality speed")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 def format_quality_speed(data: dict) -> str:
@@ -193,46 +182,46 @@ def format_quality_speed(data: dict) -> str:
 
 
 @router.callback_query(F.data == "radar:attacks")
-async def ask_attack_layer(callback: types.CallbackQuery):
+async def ask_attack_layer(callback: types.CallbackQuery, i18n: I18nContext):
     await safe_edit_text(callback.message,  "🛡 Какой уровень атак показать?", get_attacks_menu())
     await callback.answer()
 
 
 @router.callback_query(F.data == "attacks:layer3")
-async def show_attacks_layer3(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_attacks_layer3(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.attacks_layer3_summary()
         text = format_attacks_layer3(data)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for attacks layer3")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching attacks layer3")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch attacks layer3 summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 
 @router.callback_query(F.data == "attacks:layer7")
-async def show_attacks_layer7(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_attacks_layer7(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.attacks_layer7_summary()
         text = format_attacks_layer7(data)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for attacks layer7")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching attacks layer7")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch attacks layer3 summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 
@@ -283,21 +272,21 @@ def format_attacks_layer7(data: dict) -> str:
 
 
 @router.callback_query(F.data == "radar:dns")
-async def show_dns(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_dns(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.dns_by_protocol_summary()
         text = format_dns_protocol(data)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for DNS protocol")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching DNS protocol summary")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch DNS protocol summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 
@@ -310,21 +299,21 @@ def format_dns_protocol(data: dict) -> str:
 
 
 @router.callback_query(F.data == "radar:email")
-async def show_email_threats(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_email_threats(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.email_threat_category_summary()
         text = format_email_threats(data)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for email threats")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button())
+        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching email threat summary")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch email threat summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 def format_email_threats(data: dict) -> str:
@@ -344,22 +333,22 @@ def format_email_threats(data: dict) -> str:
 
 
 @router.callback_query(F.data == "radar:services")
-async def show_top_services(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient):
+async def show_top_services(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_internet_services(limit=10)
         text = format_top_services(data)
-        await safe_edit_text(callback.message, text, get_back_button())
+        await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for top internet services")
         await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.",
-                             get_back_button())
+                             get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching top internet services")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button())
+        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch top internet services")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button())
+        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
     await callback.answer()
 
 

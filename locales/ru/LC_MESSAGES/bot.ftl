@@ -31,3 +31,8 @@ error-generic = ⚠️ Не удалось получить данные. Поп
 language-choose = 🌐 Выбери язык / Choose language:
 language-changed = ✅ Язык изменён на русский
 
+period-ask-locations = 🌍 За какой период показать топ локаций?
+period-ask-ases = 🌐 За какой период показать топ провайдеров?
+period-back = ⬅️ Назад
+
+

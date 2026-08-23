@@ -30,3 +30,7 @@ error-generic = ⚠️ Couldn't fetch data. Try again later.
 
 language-choose = 🌐 Choose language / Выбери язык:
 language-changed = ✅ Language changed to English
+
+period-ask-locations = 🌍 Show top locations for which period?
+period-ask-ases = 🌐 Show top providers for which period?
+period-back = ⬅️ Back
