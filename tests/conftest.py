@@ -37,3 +37,10 @@ def mock_callback():
 @pytest.fixture
 def mock_radar_client():
     return AsyncMock()
+
+
+@pytest.fixture
+def mock_i18n():
+    i18n = MagicMock()
+    i18n.get.side_effect = lambda key, **kwargs: key
+    return i18n
