@@ -53,7 +53,7 @@ def format_device_summary(data: dict, period: str, i18n: I18nContext) -> str:
 
 @router.callback_query(F.data == "radar:locations")
 async def ask_period_locations(callback: types.CallbackQuery, i18n: I18nContext):
-    await safe_edit_text(callback.message, "🌍 За какой период показать топ локаций?", get_period_keyboard(i18n, "locations"))
+    await safe_edit_text(callback.message, i18n.get("period-ask-locations"), get_period_keyboard(i18n, "locations"))
     await callback.answer()
 
 
@@ -63,49 +63,40 @@ async def show_locations(callback: types.CallbackQuery, radar_client: CloudFlare
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_location(date_range=period, limit=5)
-        text = format_top_locations(data, period)
+        text = format_top_locations(data, period, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for locations, period=%s", period)
-        await safe_edit_text(
-            callback.message,
-            "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.",
-            get_back_button(i18n),
-        )
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching top locations, period=%s", period)
-        await safe_edit_text(
-            callback.message,
-            "⏱ Cloudflare долго отвечает. Попробуй ещё раз.",
-            get_back_button(i18n),
-        )
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch top locations for period=%s", period)
-        await safe_edit_text(
-            callback.message,
-            "⚠️ Не удалось получить данные. Попробуй позже.",
-            get_back_button(i18n),
-        )
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
-def format_top_locations(data: dict, period: str) -> str:
+def format_top_locations(data: dict, period: str, i18n: I18nContext) -> str:
     locations = data["top_0"]
-    period_label = {"7d": "7 дней", "30d": "30 дней", "90d": "90 дней"}.get(period, period)
-    lines = [f"🌍 <b>Топ локаций за {period_label}</b>\n"]
+    period_label = i18n.get(f"period-{period}")
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+
+    lines = [i18n.get("locations-title", period=period_label) + "\n"]
     for i, loc in enumerate(locations):
         medal = medals[i] if i < len(medals) else f"{i + 1}."
         name = loc["clientCountryName"]
         value = float(loc["value"])
         lines.append(f"{medal} {name}: {value:.1f}%")
+
     return "\n".join(lines)
 
 
 @router.callback_query(F.data == "radar:ases")
 async def ask_period_ases(callback: types.CallbackQuery, i18n: I18nContext):
-    await safe_edit_text(callback.message, "🌐 За какой период показать топ провайдеров?", get_period_keyboard(i18n, "ases"))
+    await safe_edit_text(callback.message, i18n.get("period-ask-ases"), get_period_keyboard(i18n, "ases"))
     await callback.answer()
+
 
 @router.callback_query(F.data.startswith("period:ases:"))
 async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
@@ -113,30 +104,32 @@ async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadar
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_ases(date_range=period, limit=5)
-        text = format_top_ases(data, period)
+        text = format_top_ases(data, period, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for ases, period=%s", period)
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching top ases, period=%s", period)
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch top ases for period=%s", period)
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
-def format_top_ases(data, period):
+def format_top_ases(data: dict, period: str, i18n: I18nContext) -> str:
     ases = data["top_0"]
-    period_label = {"7d": "7 дней", "30d": "30 дней", "90d": "90 дней"}.get(period, period)
-    lines = [f"🌐 <b>Топ провайдеров за {period_label}</b>\n"]
+    period_label = i18n.get(f"period-{period}")
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+
+    lines = [i18n.get("ases-title", period=period_label) + "\n"]
     for i, asn in enumerate(ases):
         medal = medals[i] if i < len(medals) else f"{i + 1}."
         name = asn["clientASName"]
         value = float(asn["value"])
         lines.append(f"{medal} {name}: {value:.1f}%")
+
     return "\n".join(lines)
 
 

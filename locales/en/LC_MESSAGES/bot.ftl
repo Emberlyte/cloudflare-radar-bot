@@ -34,3 +34,7 @@ language-changed = ✅ Language changed to English
 period-ask-locations = 🌍 Show top locations for which period?
 period-ask-ases = 🌐 Show top providers for which period?
 period-back = ⬅️ Back
+
+locations-title = 🌍 <b>Top locations for { $period }</b>
+
+ases-title = 🌐 <b>Top providers for { $period }</b>

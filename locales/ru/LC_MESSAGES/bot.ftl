@@ -35,4 +35,7 @@ period-ask-locations = 🌍 За какой период показать топ
 period-ask-ases = 🌐 За какой период показать топ провайдеров?
 period-back = ⬅️ Назад
 
+locations-title = 🌍 <b>Топ локаций за { $period }</b>
+
+ases-title = 🌐 <b>Топ провайдеров за { $period }</b>
 
