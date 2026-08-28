@@ -38,3 +38,19 @@ period-back = ⬅️ Back
 locations-title = 🌍 <b>Top locations for { $period }</b>
 
 ases-title = 🌐 <b>Top providers for { $period }</b>
+
+quality-title = ⚡ <b>Internet Quality (Global)</b>
+quality-download = ⬇️ Download: { $value } Mbps
+quality-upload = ⬆️ Upload: { $value } Mbps
+quality-latency-idle = ⏱ Latency (idle): { $value } ms
+quality-latency-loaded = ⏱ Latency (loaded): { $value } ms
+quality-jitter-idle = 📶 Jitter (idle): { $value } ms
+quality-jitter-loaded = 📶 Jitter (loaded): { $value } ms
+quality-packet-loss = 📉 Packet loss: { $value }%
+
+attacks-menu-title = 🛡 Which attack layer to show?
+attacks-menu-layer3 = 🌐 Layer 3 (network)
+attacks-menu-layer7 = 📡 Layer 7 (HTTP)
+
+attacks-layer3-title = 🌐 <b>Layer 3 attacks — by protocol</b>
+attacks-layer7-title = 📡 <b>Layer 7 attacks — by method</b>

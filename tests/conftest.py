@@ -42,5 +42,12 @@ def mock_radar_client():
 @pytest.fixture
 def mock_i18n():
     i18n = MagicMock()
-    i18n.get.side_effect = lambda key, **kwargs: key
+
+    def fake_get(key, **kwargs):
+        if kwargs:
+            values = " ".join(str(v) for v in kwargs.values())
+            return f"{key} {values}"
+        return key
+
+    i18n.get.side_effect = fake_get
     return i18n

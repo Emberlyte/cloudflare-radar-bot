@@ -29,10 +29,10 @@ def get_back_button(i18n) -> InlineKeyboardMarkup:
     builder.button(text=i18n.get("period-back"), callback_data="radar:menu")
     return builder.as_markup()
 
-def get_attacks_menu() -> InlineKeyboardMarkup:
+def get_attacks_menu(i18n) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="🌐 Layer 3 (сетевой уровень)", callback_data="attacks:layer3")
-    builder.button(text="📡 Layer 7 (HTTP)", callback_data="attacks:layer7")
-    builder.button(text="⬅️ Назад", callback_data="radar:menu")
+    builder.button(text=i18n.get("attacks-menu-layer3"), callback_data="attacks:layer3")
+    builder.button(text=i18n.get("attacks-menu-layer7"), callback_data="attacks:layer7")
+    builder.button(text=i18n.get("period-back"), callback_data="radar:menu")
     builder.adjust(1)
     return builder.as_markup()

@@ -39,3 +39,19 @@ locations-title = 🌍 <b>Топ локаций за { $period }</b>
 
 ases-title = 🌐 <b>Топ провайдеров за { $period }</b>
 
+quality-title = ⚡ <b>Качество интернета (глобально)</b>
+quality-download = ⬇️ Скачивание: { $value } Mbps
+quality-upload = ⬆️ Отдача: { $value } Mbps
+quality-latency-idle = ⏱ Задержка (простой): { $value } ms
+quality-latency-loaded = ⏱ Задержка (под нагрузкой): { $value } ms
+quality-jitter-idle = 📶 Джиттер (простой): { $value } ms
+quality-jitter-loaded = 📶 Джиттер (под нагрузкой): { $value } ms
+quality-packet-loss = 📉 Потеря пакетов: { $value }%
+
+attacks-menu-title = 🛡 Какой уровень атак показать?
+attacks-menu-layer3 = 🌐 Layer 3 (сетевой уровень)
+attacks-menu-layer7 = 📡 Layer 7 (HTTP)
+
+attacks-layer3-title = 🌐 <b>Layer 3 атаки — по протоколу</b>
+attacks-layer7-title = 📡 <b>Layer 7 атаки — по методу</b>
+

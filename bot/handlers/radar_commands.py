@@ -138,20 +138,21 @@ async def show_quality(callback: types.CallbackQuery, radar_client: CloudFlareRa
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.quality_speed()
-        text = format_quality_speed(data)
+        text = format_quality_speed(data, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for quality speed")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching quality speed")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch quality speed")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
-def format_quality_speed(data: dict) -> str:
+
+def format_quality_speed(data: dict, i18n: I18nContext) -> str:
     summary = data["summary_0"]
 
     download = float(summary["bandwidthDownload"])
@@ -163,20 +164,20 @@ def format_quality_speed(data: dict) -> str:
     packet_loss = float(summary["packetLoss"])
 
     return (
-        "⚡ <b>Качество интернета (глобально)</b>\n\n"
-        f"⬇️ Скачивание: {download:.1f} Mbps\n"
-        f"⬆️ Отдача: {upload:.1f} Mbps\n\n"
-        f"⏱ Задержка (простой): {latency_idle:.0f} ms\n"
-        f"⏱ Задержка (под нагрузкой): {latency_loaded:.0f} ms\n\n"
-        f"📶 Джиттер (простой): {jitter_idle:.1f} ms\n"
-        f"📶 Джиттер (под нагрузкой): {jitter_loaded:.1f} ms\n\n"
-        f"📉 Потеря пакетов: {packet_loss:.2f}%"
+        i18n.get("quality-title") + "\n\n"
+        + i18n.get("quality-download", value=f"{download:.1f}") + "\n"
+        + i18n.get("quality-upload", value=f"{upload:.1f}") + "\n\n"
+        + i18n.get("quality-latency-idle", value=f"{latency_idle:.0f}") + "\n"
+        + i18n.get("quality-latency-loaded", value=f"{latency_loaded:.0f}") + "\n\n"
+        + i18n.get("quality-jitter-idle", value=f"{jitter_idle:.1f}") + "\n"
+        + i18n.get("quality-jitter-loaded", value=f"{jitter_loaded:.1f}") + "\n\n"
+        + i18n.get("quality-packet-loss", value=f"{packet_loss:.2f}")
     )
 
 
 @router.callback_query(F.data == "radar:attacks")
 async def ask_attack_layer(callback: types.CallbackQuery, i18n: I18nContext):
-    await safe_edit_text(callback.message,  "🛡 Какой уровень атак показать?", get_attacks_menu())
+    await safe_edit_text(callback.message, i18n.get("attacks-menu-title"), get_attacks_menu(i18n))
     await callback.answer()
 
 
@@ -185,17 +186,17 @@ async def show_attacks_layer3(callback: types.CallbackQuery, radar_client: Cloud
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.attacks_layer3_summary()
-        text = format_attacks_layer3(data)
+        text = format_attacks_layer3(data, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for attacks layer3")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching attacks layer3")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch attacks layer3 summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
@@ -204,64 +205,35 @@ async def show_attacks_layer7(callback: types.CallbackQuery, radar_client: Cloud
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.attacks_layer7_summary()
-        text = format_attacks_layer7(data)
+        text = format_attacks_layer7(data, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for attacks layer7")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching attacks layer7")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
-        logger.exception("Failed to fetch attacks layer3 summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        logger.exception("Failed to fetch attacks layer7 summary")
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
-def format_attacks_layer3(data: dict) -> str:
+def format_attacks_layer3(data: dict, i18n: I18nContext) -> str:
     summary = data["summary_0"]
+    lines = [i18n.get("attacks-layer3-title") + "\n"]
+    for protocol, value in sorted(summary.items(), key=lambda x: -float(x[1])):
+        lines.append(f"{protocol}: {float(value):.1f}%")
+    return "\n".join(lines)
 
-    udp = float(summary.get("UDP", 0))
-    tcp = float(summary.get("TCP", 0))
-    gre = float(summary.get("GRE", 0))
-    icmp = float(summary.get("ICMP", 0))
 
-    return (
-        "🌐 <b>Layer 3 атаки — распределение по протоколам</b>\n\n"
-        f"⚡ <b>UDP:</b> {udp:.1f}%\n"
-        f"🔌 <b>TCP:</b> {tcp:.1f}%\n"
-        f"🛡️ <b>GRE:</b> {gre:.1f}%\n"
-        f"📡 <b>ICMP:</b> {icmp:.1f}%\n"
-    )
-
-def format_attacks_layer7(data: dict) -> str:
+def format_attacks_layer7(data: dict, i18n: I18nContext) -> str:
     summary = data["summary_0"]
-
-    get_req = float(summary.get("GET", 0))
-    post = float(summary.get("POST", 0))
-    head = float(summary.get("HEAD", 0))
-    options = float(summary.get("OPTIONS", 0))
-    patch = float(summary.get("PATCH", 0))
-    put = float(summary.get("PUT", 0))
-    delete = float(summary.get("DELETE", 0))
-
-    other = (
-            float(summary.get("UNKNOWN", 0))
-            + float(summary.get("ACL", 0))
-            + float(summary.get("other", 0))
-    )
-
-    return (
-        "🔥 <b>Layer 7 атаки — распределение по методам</b>\n\n"
-        f"📥 <b>GET:</b> {get_req:.1f}%\n"
-        f"📤 <b>POST:</b> {post:.1f}%\n"
-        f"👤 <b>HEAD:</b> {head:.1f}%\n"
-        f"⚙️ <b>OPTIONS:</b> {options:.1f}%\n"
-        f"🩹 <b>PATCH:</b> {patch:.1f}%\n"
-        f"📦 <b>PUT:</b> {put:.1f}%\n"
-        f"🗑️ <b>DELETE:</b> {delete:.1f}%\n"
-        f"❓ <b>Другие:</b> {other:.1f}%\n"
-    )
+    lines = [i18n.get("attacks-layer7-title") + "\n"]
+    for method, value in sorted(summary.items(), key=lambda x: -float(x[1])):
+        if float(value) > 0.1:
+            lines.append(f"{method}: {float(value):.1f}%")
+    return "\n".join(lines)
 
 
 @router.callback_query(F.data == "radar:dns")
