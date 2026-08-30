@@ -46,6 +46,13 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
 
+    await bot.set_my_commands([
+        BotCommand(command="start", description="Открыть главное меню"),
+        BotCommand(command="help", description="Как пользоваться ботом"),
+        BotCommand(command="about", description="О боте"),
+        BotCommand(command="language", description="Сменить язык / Change language"),
+    ])
+
     session = aiohttp.ClientSession()
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
     radar_client = CloudFlareRadarClient(session, redis_client)
