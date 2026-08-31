@@ -54,3 +54,13 @@ attacks-menu-layer7 = 📡 Layer 7 (HTTP)
 
 attacks-layer3-title = 🌐 <b>Layer 3 attacks — by protocol</b>
 attacks-layer7-title = 📡 <b>Layer 7 attacks — by method</b>
+
+dns-title = 🔤 <b>DNS queries by protocol</b>
+
+email-title = 📧 <b>Top email threats for { $period }</b>
+email-note = <i>One email may match multiple threat categories, so percentages can exceed 100%.</i>
+
+services-title = 🏆 <b>Top Internet Services</b>
+
+period-ask-email = 📧 Show email threats for which period?
+period-ask-dns = 🔤 Show DNS queries for which period?

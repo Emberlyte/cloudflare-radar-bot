@@ -241,23 +241,23 @@ async def show_dns(callback: types.CallbackQuery, radar_client: CloudFlareRadarC
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.dns_by_protocol_summary()
-        text = format_dns_protocol(data)
+        text = format_dns_protocol(data, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
-        logger.warning("Rate limited by Radar API for DNS protocol")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
+        logger.warning("Rate limited by Radar API for DNS")
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching DNS protocol summary")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch DNS protocol summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
-def format_dns_protocol(data: dict) -> str:
+def format_dns_protocol(data: dict, i18n: I18nContext) -> str:
     summary = data["summary_0"]
-    lines = ["🔤 <b>DNS-запросы по протоколу</b>\n"]
+    lines = [i18n.get("dns-title") + "\n"]
     for protocol, value in sorted(summary.items(), key=lambda x: -float(x[1])):
         lines.append(f"{protocol}: {float(value):.1f}%")
     return "\n".join(lines)
@@ -268,31 +268,32 @@ async def show_email_threats(callback: types.CallbackQuery, radar_client: CloudF
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.email_threat_category_summary()
-        text = format_email_threats(data)
+        text = format_email_threats(data, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for email threats")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching email threat summary")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch email threat summary")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
-def format_email_threats(data: dict) -> str:
+
+def format_email_threats(data: dict, i18n: I18nContext) -> str:
     summary = data["summary_0"]
-    period_label = "30 дней"
+    period_label = i18n.get("period-30d")
 
     sorted_threats = sorted(summary.items(), key=lambda x: -float(x[1]))
     top_threats = sorted_threats[:8]
 
-    lines = [f"📧 <b>Топ угроз в email за {period_label}</b>\n"]
+    lines = [i18n.get("email-title", period=period_label) + "\n"]
     for category, value in top_threats:
         lines.append(f"{category}: {float(value):.1f}%")
 
-    lines.append("\n<i>Одно письмо может попадать сразу под несколько категорий, поэтому сумма процентов может превышать 100%.</i>")
+    lines.append("\n" + i18n.get("email-note"))
 
     return "\n".join(lines)
 
@@ -302,26 +303,25 @@ async def show_top_services(callback: types.CallbackQuery, radar_client: CloudFl
     await callback.bot.send_chat_action(callback.message.chat.id, "typing")
     try:
         data = await radar_client.top_internet_services(limit=10)
-        text = format_top_services(data)
+        text = format_top_services(data, i18n)
         await safe_edit_text(callback.message, text, get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for top internet services")
-        await safe_edit_text(callback.message, "⏳ Слишком много запросов к Cloudflare. Попробуй через минуту.",
-                             get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
     except asyncio.TimeoutError:
         logger.warning("Timeout fetching top internet services")
-        await safe_edit_text(callback.message, "⏱ Cloudflare долго отвечает. Попробуй ещё раз.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-timeout"), get_back_button(i18n))
     except Exception:
         logger.exception("Failed to fetch top internet services")
-        await safe_edit_text(callback.message, "⚠️ Не удалось получить данные. Попробуй позже.", get_back_button(i18n))
+        await safe_edit_text(callback.message, i18n.get("error-generic"), get_back_button(i18n))
     await callback.answer()
 
 
-def format_top_services(data: dict) -> str:
+def format_top_services(data: dict, i18n: I18nContext) -> str:
     services = data["top_0"]
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
 
-    lines = ["🏆 <b>Топ интернет-сервисов</b>\n"]
+    lines = [i18n.get("services-title") + "\n"]
     for item in services:
         rank = item["rank"]
         service = item["service"]
