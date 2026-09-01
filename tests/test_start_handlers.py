@@ -20,19 +20,21 @@ async def test_cmd_start_sends_main_menu():
     assert "reply_markup" in call_kwargs.kwargs
 
 
-async def test_about_handler_sends_info():
+async def test_about_handler_sends_info(mock_i18n):
     message = AsyncMock()
 
-    await about_handler(message)
+    await about_handler(message, mock_i18n)
 
     message.answer.assert_called_once()
     text_arg = message.answer.call_args[0][0]
-    assert "MIT" in text_arg
+    assert "about-text" in text_arg
 
 
-async def test_cmd_command_sends_instructions():
+async def test_cmd_command_sends_instructions(mock_i18n):
     message = AsyncMock()
 
-    await cmd_command(message)
+    await cmd_command(message, mock_i18n)
 
     message.answer.assert_called_once()
+    text_arg = message.answer.call_args[0][0]
+    assert "help-text" in text_arg

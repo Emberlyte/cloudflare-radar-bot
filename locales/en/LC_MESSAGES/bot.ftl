@@ -64,3 +64,25 @@ services-title = 🏆 <b>Top Internet Services</b>
 
 period-ask-email = 📧 Show email threats for which period?
 period-ask-dns = 🔤 Show DNS queries for which period?
+
+help-text = 📖 <b>How to use this bot</b>
+
+    /start — open the main menu
+    /help — this help message
+
+    <b>Sections:</b>
+    📱 <b>Devices</b> — what devices people use to browse (desktop/mobile)
+    🌍 <b>Top Locations</b> — countries with the most HTTP traffic
+    🌐 <b>Top Providers</b> — largest internet providers (ASes)
+    ⚡ <b>Internet Quality</b> — global speed, latency, packet loss
+
+    For sections with history, you can pick a period: 7, 30, or 90 days.
+
+about-text = ℹ️ <b>About this bot</b>
+
+    This bot shows internet traffic statistics via the Cloudflare Radar API — Cloudflare's public service with aggregated data on traffic, attacks, DNS, and internet quality worldwide.
+
+    🔧 Stack: Python, aiogram 3, Redis, Docker
+    📊 Data source: Cloudflare Radar (radar.cloudflare.com)
+    📄 License: MIT
+    Source code: github.com/emberlyte/cloudflare-radar-bot
