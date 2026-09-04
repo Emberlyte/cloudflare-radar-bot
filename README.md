@@ -1,6 +1,9 @@
 
 # Cloudflare Radar Bot
 
+[![CI/CD](https://github.com/emberlyte/cloudflare-radar-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/emberlyte/cloudflare-radar-bot/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Telegram-бот, показывающий статистику интернет-трафика через [Cloudflare Radar API](https://radar.cloudflare.com/) — публичный сервис Cloudflare с агрегированными данными о трафике, атаках, DNS и качестве интернета по всему миру.
 
 
