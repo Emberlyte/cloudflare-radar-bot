@@ -29,7 +29,6 @@ Telegram-бот, показывающий статистику интернет-
 - **GitHub Actions** — CI/CD (тесты → сборка образа → деплой)
 
 
-
 ## Requirements
 
 - Docker и Docker Compose
@@ -47,8 +46,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Бот запустится в лонг-поллинг режиме, локально ничего дополнительно настраивать не нужно
-    
+Бот запустится в polling-режиме, локально ничего дополнительно настраивать не нужно    
 ## Environment Variables
 
 | Переменная | Обязательна | Описание |
@@ -75,11 +73,9 @@ uv run pytest -v
 - **Polling** — используется локально по умолчанию, не требует публичного домена
 - **Webhook** — для продакшена, требует reverse proxy (nginx) с TLS-сертификатом
 
-CI/CD настроен через GitHub Actions: пуш в `main` → тесты → сборка Docker-образа → публикация в GHCR → деплой на сервер по ssh
-
+CI/CD настроен через GitHub Actions: пуш в `main` → тесты → сборка Docker-образа → публикация в GHCR → деплой на сервер по SSH
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
-
+[MIT](LICENSE)
 
