@@ -2,6 +2,9 @@ import asyncio
 import logging
 
 from aiogram import Router, types, F
+from aiogram.types import BufferedInputFile
+
+from bot.utils.charts import make_devices_pie_chart
 from service.cloudflare_radar import CloudFlareRadarClient, CloudflareRateLimitError
 from bot.keyboards.main_menu import get_back_button, get_main_menu, get_period_keyboard, get_attacks_menu
 from bot.utils.safe_edit import safe_edit_text
@@ -20,11 +23,28 @@ async def ask_period_devices(callback: types.CallbackQuery, i18n: I18nContext):
 @router.callback_query(F.data.startswith("period:devices:"))
 async def show_devices(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     period = callback.data.split(":")[2]
-    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    await callback.bot.send_chat_action(callback.message.chat.id, "upload_photo")
     try:
         data = await radar_client.summary_device_type(date_range=period)
-        text = format_device_summary(data, period, i18n)
-        await safe_edit_text(callback.message, text, get_back_button(i18n))
+        summary = data["summary_0"]
+        desktop = float(summary["desktop"])
+        mobile = float(summary["mobile"])
+        other = float(summary["other"])
+
+        period_label = i18n.get(f"period-{period}")
+        chart_buffer = make_devices_pie_chart(desktop, mobile, other)
+
+        caption = (
+            i18n.get("devices-title", period=period_label) + "\n\n"
+            + i18n.get("devices-desktop", value=f"{desktop:.1f}") + "\n"
+            + i18n.get("devices-mobile", value=f"{mobile:.1f}") + "\n"
+            + i18n.get("devices-other", value=f"{other:.1f}")
+        )
+
+        photo = BufferedInputFile(chart_buffer.read(), filename="devices.png")
+
+        await callback.message.delete()
+        await callback.message.answer_photo(photo, caption=caption, parse_mode="HTML", reply_markup=get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for devices, period=%s", period)
         await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
@@ -333,5 +353,9 @@ def format_top_services(data: dict, i18n: I18nContext) -> str:
 
 @router.callback_query(F.data == "radar:menu")
 async def back_to_menu(callback: types.CallbackQuery, i18n: I18nContext):
-    await safe_edit_text(callback.message, i18n.get("menu-choose"), get_main_menu(i18n))
+    if callback.message.photo:
+        await callback.message.delete()
+        await callback.message.answer(i18n.get("menu-choose"), reply_markup=get_main_menu(i18n))
+    else:
+        await safe_edit_text(callback.message, i18n.get("menu-choose"), get_main_menu(i18n))
     await callback.answer()
