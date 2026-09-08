@@ -28,9 +28,12 @@ async def test_show_devices_success(mock_callback, mock_radar_client, mock_i18n)
     await show_devices(mock_callback, mock_radar_client, mock_i18n)
 
     mock_radar_client.summary_device_type.assert_called_once_with(date_range="30d")
-    mock_callback.message.edit_text.assert_called_once()
-    text_arg = mock_callback.message.edit_text.call_args[0][0]
-    assert "devices-title" in text_arg
+    mock_callback.message.delete.assert_called_once()
+    mock_callback.message.answer_photo.assert_called_once()
+
+    call_kwargs = mock_callback.message.answer_photo.call_args.kwargs
+    assert "caption" in call_kwargs
+    assert "devices-desktop" in call_kwargs["caption"]
     mock_callback.answer.assert_called_once()
 
 
