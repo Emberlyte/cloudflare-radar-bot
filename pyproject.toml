@@ -6,6 +6,7 @@ dependencies = [
     "aiogram==3.31.0",
     "aiogram-i18n>=1.5",
     "dotenv>=0.9.9",
+    "fakeredis==2.38.0",
     "fluent-runtime>=0.4.0",
     "matplotlib==3.11.1",
     "pandas>=3.0.3",
