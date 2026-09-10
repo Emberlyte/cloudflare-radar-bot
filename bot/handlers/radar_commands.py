@@ -4,7 +4,7 @@ import logging
 from aiogram import Router, types, F
 from aiogram.types import BufferedInputFile
 
-from bot.utils.charts import make_devices_pie_chart
+from bot.utils.charts import make_devices_pie_chart, make_quality_bar_chart
 from service.cloudflare_radar import CloudFlareRadarClient, CloudflareRateLimitError
 from bot.keyboards.main_menu import get_back_button, get_main_menu, get_period_keyboard, get_attacks_menu
 from bot.utils.safe_edit import safe_edit_text
@@ -155,11 +155,38 @@ def format_top_ases(data: dict, period: str, i18n: I18nContext) -> str:
 
 @router.callback_query(F.data == "radar:quality")
 async def show_quality(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
-    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    await callback.bot.send_chat_action(callback.message.chat.id, "upload_photo")
     try:
         data = await radar_client.quality_speed()
-        text = format_quality_speed(data, i18n)
-        await safe_edit_text(callback.message, text, get_back_button(i18n))
+        summary = data["summary_0"]
+
+        download = float(summary["bandwidthDownload"])
+        upload = float(summary["bandwidthUpload"])
+        latency_idle = float(summary["latencyIdle"])
+        latency_loaded = float(summary["latencyLoaded"])
+        jitter_idle = float(summary["jitterIdle"])
+        jitter_loaded = float(summary["jitterLoaded"])
+        packet_loss = float(summary["packetLoss"])
+
+        chart_buffer = make_quality_bar_chart(
+            download, upload, latency_idle, latency_loaded, jitter_idle, jitter_loaded, packet_loss
+        )
+
+        caption = (
+            i18n.get("quality-title") + "\n\n"
+            + i18n.get("quality-download", value=f"{download:.1f}") + "\n"
+            + i18n.get("quality-upload", value=f"{upload:.1f}") + "\n\n"
+            + i18n.get("quality-latency-idle", value=f"{latency_idle:.0f}") + "\n"
+            + i18n.get("quality-latency-loaded", value=f"{latency_loaded:.0f}") + "\n\n"
+            + i18n.get("quality-jitter-idle", value=f"{jitter_idle:.1f}") + "\n"
+            + i18n.get("quality-jitter-loaded", value=f"{jitter_loaded:.1f}") + "\n\n"
+            + i18n.get("quality-packet-loss", value=f"{packet_loss:.2f}")
+        )
+
+        photo = BufferedInputFile(chart_buffer.read(), filename="quality.png")
+
+        await callback.message.delete()
+        await callback.message.answer_photo(photo, caption=caption, parse_mode="HTML", reply_markup=get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for quality speed")
         await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))

@@ -119,9 +119,12 @@ async def test_show_quality_success(mock_callback, mock_radar_client, mock_i18n)
 
     await show_quality(mock_callback, mock_radar_client, mock_i18n)
 
-    text_arg = mock_callback.message.edit_text.call_args[0][0]
-    assert "120.5" in text_arg
-    assert "quality-title" in text_arg
+    mock_callback.message.delete.assert_called_once()
+    mock_callback.message.answer_photo.assert_called_once()
+
+    call_kwargs = mock_callback.message.answer_photo.call_args.kwargs
+    assert "caption" in call_kwargs
+    assert "quality-title" in call_kwargs["caption"]
 
 
 async def test_show_attacks_layer3_success(mock_callback, mock_radar_client, mock_i18n):
