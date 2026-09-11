@@ -8,7 +8,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "fakeredis==2.38.0",
     "fluent-runtime>=0.4.0",
-    "matplotlib==3.11.1",
+    "matplotlib==3.11.2",
     "pandas>=3.0.3",
     "pandas-stubs~=3.0.3",
     "pydantic-settings>=2.14.2",
