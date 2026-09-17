@@ -85,9 +85,11 @@ async def test_show_locations_success(mock_callback, mock_radar_client, mock_i18
     await show_locations(mock_callback, mock_radar_client, mock_i18n)
 
     mock_radar_client.top_location.assert_called_once_with(date_range="7d", limit=5)
-    text_arg = mock_callback.message.edit_text.call_args[0][0]
-    assert "United States" in text_arg
-    assert "locations-title" in text_arg
+    mock_callback.message.delete.assert_called_once()
+    mock_callback.message.answer_photo.assert_called_once()
+
+    call_kwargs = mock_callback.message.answer_photo.call_args.kwargs
+    assert "United States" in call_kwargs["caption"]
 
 
 async def test_show_ases_success(mock_callback, mock_radar_client, mock_i18n):
@@ -99,10 +101,11 @@ async def test_show_ases_success(mock_callback, mock_radar_client, mock_i18n):
     await show_ases(mock_callback, mock_radar_client, mock_i18n)
 
     mock_radar_client.top_ases.assert_called_once_with(date_range="90d", limit=5)
-    text_arg = mock_callback.message.edit_text.call_args[0][0]
-    assert "Google LLC" in text_arg
-    assert "ases-title" in text_arg
+    mock_callback.message.delete.assert_called_once()
+    mock_callback.message.answer_photo.assert_called_once()
 
+    call_kwargs = mock_callback.message.answer_photo.call_args.kwargs
+    assert "Google LLC" in call_kwargs["caption"]
 
 async def test_show_quality_success(mock_callback, mock_radar_client, mock_i18n):
     mock_radar_client.quality_speed.return_value = {

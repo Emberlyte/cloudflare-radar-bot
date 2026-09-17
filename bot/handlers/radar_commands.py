@@ -4,7 +4,7 @@ import logging
 from aiogram import Router, types, F
 from aiogram.types import BufferedInputFile
 
-from bot.utils.charts import make_devices_pie_chart, make_quality_bar_chart
+from bot.utils.charts import make_devices_pie_chart, make_quality_bar_chart, make_ranking_bar_chart
 from service.cloudflare_radar import CloudFlareRadarClient, CloudflareRateLimitError
 from bot.keyboards.main_menu import get_back_button, get_main_menu, get_period_keyboard, get_attacks_menu
 from bot.utils.safe_edit import safe_edit_text
@@ -77,14 +77,25 @@ async def ask_period_locations(callback: types.CallbackQuery, i18n: I18nContext)
     await callback.answer()
 
 
+
 @router.callback_query(F.data.startswith("period:locations:"))
 async def show_locations(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     period = callback.data.split(":")[2]
-    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    await callback.bot.send_chat_action(callback.message.chat.id, "upload_photo")
     try:
         data = await radar_client.top_location(date_range=period, limit=5)
+        locations = data["top_0"]
+
+        chart_items = [(loc["clientCountryName"], float(loc["value"])) for loc in locations]
+        chart_buffer = make_ranking_bar_chart(chart_items)
+
+        period_label = i18n.get(f"period-{period}")
         text = format_top_locations(data, period, i18n)
-        await safe_edit_text(callback.message, text, get_back_button(i18n))
+
+        photo = BufferedInputFile(chart_buffer.read(), filename="locations.png")
+
+        await callback.message.delete()
+        await callback.message.answer_photo(photo, caption=text, parse_mode="HTML", reply_markup=get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for locations, period=%s", period)
         await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
@@ -121,11 +132,20 @@ async def ask_period_ases(callback: types.CallbackQuery, i18n: I18nContext):
 @router.callback_query(F.data.startswith("period:ases:"))
 async def show_ases(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
     period = callback.data.split(":")[2]
-    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    await callback.bot.send_chat_action(callback.message.chat.id, "upload_photo")
     try:
         data = await radar_client.top_ases(date_range=period, limit=5)
+        ases = data["top_0"]
+
+        chart_items = [(asn["clientASName"], float(asn["value"])) for asn in ases]
+        chart_buffer = make_ranking_bar_chart(chart_items)
+
         text = format_top_ases(data, period, i18n)
-        await safe_edit_text(callback.message, text, get_back_button(i18n))
+
+        photo = BufferedInputFile(chart_buffer.read(), filename="ases.png")
+
+        await callback.message.delete()
+        await callback.message.answer_photo(photo, caption=text, parse_mode="HTML", reply_markup=get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for ases, period=%s", period)
         await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))

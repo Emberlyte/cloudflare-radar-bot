@@ -48,3 +48,20 @@ def make_quality_bar_chart(
     buffer.seek(0)
 
     return buffer
+
+def make_ranking_bar_chart(items: list[tuple[str, float]], color: str = "#F6821F") -> io.BytesIO:
+
+    labels = [item[0] for item in items]
+    values = [item[1] for item in items]
+
+    fig, ax = plt.subplots(figsize=(7, max(3, len(items) * 0.6)))
+    bars = ax.barh(labels, values, color=color)
+    ax.bar_label(bars, fmt="%.1f%%", padding=3)
+    ax.invert_yaxis()
+
+    buffer = io.BytesIO()
+    fig.savefig(buffer, format="png", bbox_inches="tight", dpi=150)
+    plt.close(fig)
+    buffer.seek(0)
+
+    return buffer
