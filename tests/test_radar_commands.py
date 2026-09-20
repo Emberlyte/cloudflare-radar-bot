@@ -138,9 +138,35 @@ async def test_show_attacks_layer3_success(mock_callback, mock_radar_client, moc
     await show_attacks_layer3(mock_callback, mock_radar_client, mock_i18n)
 
     mock_radar_client.attacks_layer3_summary.assert_called_once()
+    mock_callback.message.delete.assert_called_once()
+    mock_callback.message.answer_photo.assert_called_once()
+
+    call_kwargs = mock_callback.message.answer_photo.call_args.kwargs
+    assert "UDP" in call_kwargs["caption"]
+
+
+async def test_show_attacks_layer7_success(mock_callback, mock_radar_client, mock_i18n):
+    mock_radar_client.attacks_layer7_summary.return_value = {
+        "summary_0": {"GET": "81.1", "POST": "15.1"}
+    }
+
+    await show_attacks_layer7(mock_callback, mock_radar_client, mock_i18n)
+
+    mock_radar_client.attacks_layer7_summary.assert_called_once()
+    mock_callback.message.delete.assert_called_once()
+    mock_callback.message.answer_photo.assert_called_once()
+
+    call_kwargs = mock_callback.message.answer_photo.call_args.kwargs
+    assert "GET" in call_kwargs["caption"]
+
+
+async def test_show_attacks_layer3_rate_limited(mock_callback, mock_radar_client, mock_i18n):
+    mock_radar_client.attacks_layer3_summary.side_effect = CloudflareRateLimitError("rate limited")
+
+    await show_attacks_layer3(mock_callback, mock_radar_client, mock_i18n)
+
     text_arg = mock_callback.message.edit_text.call_args[0][0]
-    assert "UDP" in text_arg
-    assert "attacks-layer3-title" in text_arg
+    assert "error-rate-limited" in text_arg
 
 
 async def test_show_dns_success(mock_callback, mock_radar_client, mock_i18n):
@@ -183,15 +209,6 @@ async def test_show_top_services_success(mock_callback, mock_radar_client, mock_
     text_arg = mock_callback.message.edit_text.call_args[0][0]
     assert "Google" in text_arg
     assert "services-title" in text_arg
-
-
-async def test_show_attacks_layer3_rate_limited(mock_callback, mock_radar_client, mock_i18n):
-    mock_radar_client.attacks_layer3_summary.side_effect = CloudflareRateLimitError("rate limited")
-
-    await show_attacks_layer3(mock_callback, mock_radar_client, mock_i18n)
-
-    text_arg = mock_callback.message.edit_text.call_args[0][0]
-    assert "error-rate-limited" in text_arg
 
 
 async def test_show_top_services_rate_limited(mock_callback, mock_radar_client, mock_i18n):

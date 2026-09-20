@@ -250,11 +250,21 @@ async def ask_attack_layer(callback: types.CallbackQuery, i18n: I18nContext):
 
 @router.callback_query(F.data == "attacks:layer3")
 async def show_attacks_layer3(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
-    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    await callback.bot.send_chat_action(callback.message.chat.id, "upload_photo")
     try:
         data = await radar_client.attacks_layer3_summary()
+        summary = data["summary_0"]
+
+        sorted_items = sorted(summary.items(), key=lambda x: -float(x[1]))
+        chart_items = [(protocol, float(value)) for protocol, value in sorted_items]
+        chart_buffer = make_ranking_bar_chart(chart_items)
+
         text = format_attacks_layer3(data, i18n)
-        await safe_edit_text(callback.message, text, get_back_button(i18n))
+
+        photo = BufferedInputFile(chart_buffer.read(), filename="attacks_layer3.png")
+
+        await callback.message.delete()
+        await callback.message.answer_photo(photo, caption=text, parse_mode="HTML", reply_markup=get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for attacks layer3")
         await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
@@ -267,13 +277,22 @@ async def show_attacks_layer3(callback: types.CallbackQuery, radar_client: Cloud
     await callback.answer()
 
 
-@router.callback_query(F.data == "attacks:layer7")
 async def show_attacks_layer7(callback: types.CallbackQuery, radar_client: CloudFlareRadarClient, i18n: I18nContext):
-    await callback.bot.send_chat_action(callback.message.chat.id, "typing")
+    await callback.bot.send_chat_action(callback.message.chat.id, "upload_photo")
     try:
         data = await radar_client.attacks_layer7_summary()
+        summary = data["summary_0"]
+
+        sorted_items = sorted(summary.items(), key=lambda x: -float(x[1]))
+        chart_items = [(method, float(value)) for method, value in sorted_items if float(value) > 0.1]
+        chart_buffer = make_ranking_bar_chart(chart_items)
+
         text = format_attacks_layer7(data, i18n)
-        await safe_edit_text(callback.message, text, get_back_button(i18n))
+
+        photo = BufferedInputFile(chart_buffer.read(), filename="attacks_layer7.png")
+
+        await callback.message.delete()
+        await callback.message.answer_photo(photo, caption=text, parse_mode="HTML", reply_markup=get_back_button(i18n))
     except CloudflareRateLimitError:
         logger.warning("Rate limited by Radar API for attacks layer7")
         await safe_edit_text(callback.message, i18n.get("error-rate-limited"), get_back_button(i18n))
